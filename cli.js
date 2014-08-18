@@ -57,9 +57,29 @@ var cli = function cli( promptString, workingDirectory ){
 		@end-meta-configuration
 	*/
 
-		
+	var commandInterface = readline.createInterface( {
+		"input": process.stdin,
+		"output": process.stdout
+	} );
+
+	commandInterface.setPrompt( promptString );
+
+	commandInterface.prompt( );
+
+	commandInterface.on( "line",
+		function onLine( line ){
+			line = line.trim( );
+
+			if(  )
+		} );
+
+	commandInterface.on( "close",
+		function onClose( ){
+
+		} );
 };
 
 var readline = require( "readline" );
+var fs = require( "fs" );
 
 module.exports = cli;
