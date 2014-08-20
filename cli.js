@@ -70,7 +70,6 @@ var cli = function cli( promptString, workingDirectory ){
 		function onLine( line ){
 			line = line.trim( );
 
-			if(  )
 		} );
 
 	commandInterface.on( "close",
