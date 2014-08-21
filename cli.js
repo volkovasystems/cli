@@ -43,7 +43,9 @@
 	@include:
 		{			
 			"readline@nodejs": "readline",
-			"fs@nodejs": "fs"
+			"fs@nodejs": "fs",
+			"path@nodejs": "path",
+			"class-annotation.js@github.com/volkovasystems": "Annotation"
 		}
 	@end-include
 */
@@ -57,18 +59,88 @@ var cli = function cli( promptString, workingDirectory ){
 		@end-meta-configuration
 	*/
 
+    var containingDirectory = module.filename.split( path.sep ).reverse( ).slice( 2 ).reverse( ).join( path.sep );
+
+    if( typeof workingDirectory == "string" &&
+        !fs.existsSync( workingDirectory ) )
+    {
+        console.warn( "given working directory is not existing" );
+        console.warn( "using the containing directory instead" );
+
+        workingDirectory = containingDirectory;
+    }
+
+    if( !fs.existsSync( containingDirectory ) ){
+        var error = new Error( "fatal:containing directory is not existing" );
+        console.error( error );
+        throw error;
+    }
+
+    if( typeof workingDirectory == "undefined" ){
+        workingDirectory = containingDirectory;
+    }
+
+    process.chdir( workingDirectory );
+
+    var directoryList = fs.readdirSync( workingDirectory );
+
+    var directoryPath = null;
+    var cliInterpreterList = [ ];
+    var cliInterpreterNamespace = null;
+    var cliInterpreterEngineFilePath = null;
+
+    var directoryListLength = directoryList.length;
+    for( var index = 0; index < directoryListLength; index++ ){
+        directoryPath = directoryList[ index ];
+
+        if( fs.statSync( directoryPath ).isDirectory( ) &&
+            CLI_INTERPRETER_NAMESPACE_PATTERN.test( directoryPath ) )
+        {
+            cliInterpreterNamespace = directoryPath.match( CLI_INTERPRETER_NAMESPACE_PATTERN )[ 0 ];
+            cliInterpreterEngineFilePath = [ directoryPath, cliInterpreterNamespace + ".js" ].join( path.sep );
+            cliInterpreterList.push( cliInterpreterEngineFilePath );
+        }
+    }
+
+    var cliInterpreterEngineSet = { };
+    var cliInterpreterEngineNamespace = null;
+
+    var cliInterpreterListLength = cliInterpreterList.length;
+    for( var index = 0; index < cliInterpreterListLength; index++ ){
+        cliInterpreterEngineFilePath = cliInterpreterList[ index ];
+
+        cliInterpreterEngineNamespace = cliInterpreterEngineFilePath.split( ".js" )[ 0 ].match( CLI_INTERPRETER_NAMESPACE_PATTERN )[ 1 ];
+
+        if( fs.existsSync( cliInterpreterEngineFilePath ) &&
+            fs.statSync( cliInterpreterEngineFilePath).isFile( ) )
+        {
+            try{
+                cliInterpreterEngineSet[ cliInterpreterEngineNamespace ] = require( cliInterpreterEngineFilePath );
+
+            }catch( error ){
+                console.warn( "error encountered during CLI interpreter engine inclusion" );
+                console.warn( "please check each CLI interpreter module for possible cause of error" );
+                console.error( error );
+            }
+        }
+    }
+
 	var commandInterface = readline.createInterface( {
 		"input": process.stdin,
 		"output": process.stdout
 	} );
 
-	commandInterface.setPrompt( promptString );
+    var promptStringList = [ promptString, " " ];
+
+	commandInterface.setPrompt( promptStringList.join( "" ) );
 
 	commandInterface.prompt( );
 
 	commandInterface.on( "line",
 		function onLine( line ){
 			line = line.trim( );
+
+
 
 		} );
 
@@ -80,5 +152,12 @@ var cli = function cli( promptString, workingDirectory ){
 
 var readline = require( "readline" );
 var fs = require( "fs" );
+var path = require( "path" );
+
+var Annotation = require( "./class-annotation/class-annotation.js" );
+
+const CLI_INTERPRETER_NAMESPACE_PATTERN = /cli-((?:[a-z][a-z0-9]*-?)*[a-z][a-z0-9]*)$/;
 
 module.exports = cli;
+
+cli( ">" );
