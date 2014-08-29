@@ -69,13 +69,17 @@ var cli = function cli( promptString, workingDirectory ){
         workingDirectory = containingDirectory;
     }
 
-    if( !fs.existsSync( containingDirectory ) ){
+    if( workingDirectory === containingDirectory &&
+        !fs.existsSync( containingDirectory ) )
+    {
         var error = new Error( "fatal:containing directory is not existing" );
         console.error( error );
         throw error;
     }
 
-    if( typeof workingDirectory == "undefined" ){
+    if( typeof workingDirectory == "undefined" &&
+        !fs.existsSync( containingDirectory ) )
+    {
         workingDirectory = containingDirectory;
     }
 
