@@ -144,13 +144,11 @@ var cli = function cli( promptString, workingDirectory ){
 		function onLine( line ){
 			line = line.trim( );
 
+            commandInterface.prompt( );
 
-
-		} );
-
-	commandInterface.on( "close",
-		function onClose( ){
-
+            for( var interpreterEngine in cliInterpreterEngineSet ){
+                cliInterpreterEngineSet[ interpreterEngine ]( line, commandInterface );
+            }
 		} );
 };
 
