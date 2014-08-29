@@ -154,10 +154,6 @@ var readline = require( "readline" );
 var fs = require( "fs" );
 var path = require( "path" );
 
-var Annotation = require( "./class-annotation/class-annotation.js" );
-
 const CLI_INTERPRETER_NAMESPACE_PATTERN = /cli-((?:[a-z][a-z0-9]*-?)*[a-z][a-z0-9]*)$/;
 
 module.exports = cli;
-
-cli( ">" );
