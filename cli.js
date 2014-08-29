@@ -79,6 +79,7 @@ var cli = function cli( promptString, workingDirectory ){
         workingDirectory = containingDirectory;
     }
 
+    //: By changing the working directory to where the commands are then we can reference the command properly without necessary inline configurations.
     process.chdir( workingDirectory );
 
     var directoryList = fs.readdirSync( workingDirectory );
