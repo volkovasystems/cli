@@ -44,8 +44,7 @@
 		{			
 			"readline@nodejs": "readline",
 			"fs@nodejs": "fs",
-			"path@nodejs": "path",
-			"class-annotation.js@github.com/volkovasystems": "Annotation"
+			"path@nodejs": "path"
 		}
 	@end-include
 */
