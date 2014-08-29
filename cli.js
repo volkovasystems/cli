@@ -78,7 +78,7 @@ var cli = function cli( promptString, workingDirectory ){
     }
 
     if( typeof workingDirectory == "undefined" &&
-        !fs.existsSync( containingDirectory ) )
+        fs.existsSync( containingDirectory ) )
     {
         workingDirectory = containingDirectory;
     }
@@ -86,6 +86,7 @@ var cli = function cli( promptString, workingDirectory ){
     //: By changing the working directory to where the commands are then we can reference the command properly without necessary inline configurations.
     process.chdir( workingDirectory );
 
+    //: Since we are now inside the working directory, we will assume other cli modules reside on this directory.
     var directoryList = fs.readdirSync( workingDirectory );
 
     var directoryPath = null;
@@ -93,6 +94,7 @@ var cli = function cli( promptString, workingDirectory ){
     var cliInterpreterNamespace = null;
     var cliInterpreterEngineFilePath = null;
 
+    //: We will read any modules that pass the cli interpreter namespace pattern.
     var directoryListLength = directoryList.length;
     for( var index = 0; index < directoryListLength; index++ ){
         directoryPath = directoryList[ index ];
@@ -101,7 +103,7 @@ var cli = function cli( promptString, workingDirectory ){
             CLI_INTERPRETER_NAMESPACE_PATTERN.test( directoryPath ) )
         {
             cliInterpreterNamespace = directoryPath.match( CLI_INTERPRETER_NAMESPACE_PATTERN )[ 0 ];
-            cliInterpreterEngineFilePath = [ directoryPath, cliInterpreterNamespace + ".js" ].join( path.sep );
+            cliInterpreterEngineFilePath = [ workingDirectory, directoryPath, cliInterpreterNamespace + ".js" ].join( path.sep );
             cliInterpreterList.push( cliInterpreterEngineFilePath );
         }
     }
@@ -109,6 +111,7 @@ var cli = function cli( promptString, workingDirectory ){
     var cliInterpreterEngineSet = { };
     var cliInterpreterEngineNamespace = null;
 
+    //: All passed cli interpreter modules will then be required.
     var cliInterpreterListLength = cliInterpreterList.length;
     for( var index = 0; index < cliInterpreterListLength; index++ ){
         cliInterpreterEngineFilePath = cliInterpreterList[ index ];
@@ -129,26 +132,27 @@ var cli = function cli( promptString, workingDirectory ){
         }
     }
 
-	var commandInterface = readline.createInterface( {
+	var commandLineInterface = readline.createInterface( {
 		"input": process.stdin,
-		"output": process.stdout
+		"output": process.stdout,
+        "terminal": true
 	} );
 
     var promptStringList = [ promptString, " " ];
 
-	commandInterface.setPrompt( promptStringList.join( "" ) );
+    commandLineInterface.setPrompt( promptStringList.join( "" ) );
 
-	commandInterface.prompt( );
+    commandLineInterface.prompt( );
 
-	commandInterface.on( "line",
+    commandLineInterface.on( "line",
 		function onLine( line ){
 			line = line.trim( );
 
-            commandInterface.prompt( );
-
             for( var interpreterEngine in cliInterpreterEngineSet ){
-                cliInterpreterEngineSet[ interpreterEngine ]( line, commandInterface );
+                cliInterpreterEngineSet[ interpreterEngine ]( line, commandLineInterface );
             }
+
+            commandLineInterface.prompt( );
 		} );
 };
 
