@@ -132,6 +132,8 @@ var cli = function cli( promptString, workingDirectory ){
         }
     }
 
+    var cliEnvironmentVariableSet = { };
+
 	var commandLineInterface = readline.createInterface( {
 		"input": process.stdin,
 		"output": process.stdout,
