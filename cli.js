@@ -151,7 +151,7 @@ var cli = function cli( promptString, workingDirectory ){
 			line = line.trim( );
 
             for( var interpreterEngine in cliInterpreterEngineSet ){
-                cliInterpreterEngineSet[ interpreterEngine ]( line, commandLineInterface );
+                cliInterpreterEngineSet[ interpreterEngine ]( line, commandLineInterface, cliEnvironmentVariableSet );
             }
 
             commandLineInterface.prompt( );
