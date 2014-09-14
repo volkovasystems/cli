@@ -42,13 +42,13 @@
 
 	@include:
 		{			
-			"readline@nodejs": "readline",
+			"class-cli@github.com/volkovasystems": "CLI",
 			"fs@nodejs": "fs",
 			"path@nodejs": "path"
 		}
 	@end-include
 */
-var cli = function cli( promptString, workingDirectory ){
+var cli = function cli( cliNamespace, promptString, workingDirectory ){
 	/*:
 		@meta-configuration:
 			{
@@ -58,110 +58,14 @@ var cli = function cli( promptString, workingDirectory ){
 		@end-meta-configuration
 	*/
 
-    var containingDirectory = module.filename.split( path.sep ).reverse( ).slice( 2 ).reverse( ).join( path.sep );
-
-    if( typeof workingDirectory == "string" &&
-        !fs.existsSync( workingDirectory ) )
-    {
-        console.warn( "given working directory is not existing" );
-        console.warn( "using the containing directory instead" );
-
-        workingDirectory = containingDirectory;
-    }
-
-    if( workingDirectory === containingDirectory &&
-        !fs.existsSync( containingDirectory ) )
-    {
-        var error = new Error( "fatal:containing directory is not existing" );
-        console.error( error );
-        throw error;
-    }
-
-    if( typeof workingDirectory == "undefined" &&
-        fs.existsSync( containingDirectory ) )
-    {
-        workingDirectory = containingDirectory;
-    }
-
-    //: By changing the working directory to where the commands are then we can reference the command properly without necessary inline configurations.
-    process.chdir( workingDirectory );
-
-    //: Since we are now inside the working directory, we will assume other cli modules reside on this directory.
-    var directoryList = fs.readdirSync( workingDirectory );
-
-    var directoryPath = null;
-    var cliInterpreterList = [ ];
-    var cliInterpreterNamespace = null;
-    var cliInterpreterEngineFilePath = null;
-
-    //: We will read any modules that pass the cli interpreter namespace pattern.
-    var directoryListLength = directoryList.length;
-    for( var index = 0; index < directoryListLength; index++ ){
-        directoryPath = directoryList[ index ];
-
-        if( fs.statSync( directoryPath ).isDirectory( ) &&
-            CLI_INTERPRETER_NAMESPACE_PATTERN.test( directoryPath ) )
-        {
-            cliInterpreterNamespace = directoryPath.match( CLI_INTERPRETER_NAMESPACE_PATTERN )[ 0 ];
-            cliInterpreterEngineFilePath = [ workingDirectory, directoryPath, cliInterpreterNamespace + ".js" ].join( path.sep );
-            cliInterpreterList.push( cliInterpreterEngineFilePath );
-        }
-    }
-
-    var cliInterpreterEngineSet = { };
-    var cliInterpreterEngineNamespace = null;
-
-    //: All passed cli interpreter modules will then be required.
-    var cliInterpreterListLength = cliInterpreterList.length;
-    for( var index = 0; index < cliInterpreterListLength; index++ ){
-        cliInterpreterEngineFilePath = cliInterpreterList[ index ];
-
-        cliInterpreterEngineNamespace = cliInterpreterEngineFilePath.split( ".js" )[ 0 ].match( CLI_INTERPRETER_NAMESPACE_PATTERN )[ 1 ];
-
-        if( fs.existsSync( cliInterpreterEngineFilePath ) &&
-            fs.statSync( cliInterpreterEngineFilePath).isFile( ) )
-        {
-            try{
-                cliInterpreterEngineSet[ cliInterpreterEngineNamespace ] = require( cliInterpreterEngineFilePath );
-
-            }catch( error ){
-                console.warn( "error encountered during CLI interpreter engine inclusion" );
-                console.warn( "please check each CLI interpreter module for possible cause of error" );
-                console.error( error );
-            }
-        }
-    }
-
-    var cliEnvironmentVariableSet = { };
-
-	var commandLineInterface = readline.createInterface( {
-		"input": process.stdin,
-		"output": process.stdout,
-        "terminal": true
-	} );
-
-    var promptStringList = [ promptString, " " ];
-
-    commandLineInterface.setPrompt( promptStringList.join( "" ) );
-
-    commandLineInterface.prompt( );
-
-    commandLineInterface.on( "line",
-		function onLine( line ){
-			line = line.trim( );
-
-            for( var interpreterEngine in cliInterpreterEngineSet ){
-                cliInterpreterEngineSet[ interpreterEngine ]( line, commandLineInterface, cliEnvironmentVariableSet );
-            }
-
-            commandLineInterface.prompt( );
-		} );
+    var cli = new CLI( );
+    
+    cli
+        .adaptWorkingEnvironment( )
+        .constructCommandLineInterface( )
+        .startCommandLine( );
 };
 
-var readline = require( "readline" );
-var fs = require( "fs" );
-var path = require( "path" );
-
-const CLI_INTERPRETER_NAMESPACE_PATTERN = /cli-((?:[a-z][a-z0-9]*-?)*[a-z][a-z0-9]*)$/;
+var CLI = require( "./class-cli/class-cli.js" );
 
 module.exports = cli;
